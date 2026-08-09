@@ -6,6 +6,9 @@ Know when configs have changed and which downstream steps need to re-run. The sa
 
 Extracted from the SpiritEngine project.
 
+This is an actively maintained fork of `spiritengine/knurl`
+(<https://github.com/ltagliaferri/knurl>) and may diverge from it.
+
 ## Why knurl?
 
 - **canon** - Canonical JSON serialization (RFC 8785 + mandatory Unicode NFC
