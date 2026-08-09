@@ -135,6 +135,16 @@ assert canon.serialize(config2) == canonical
 # Use for hashing configs
 import hashlib
 config_hash = hashlib.sha256(canonical).hexdigest()
+
+# Floats are rejected by default (they're not portably canonical); opt in
+# explicitly for non-hash use
+canon.serialize({"ratio": 0.5})                          # raises CanonError
+canon.serialize({"ratio": 0.5}, accept_floats=True)       # OK
+
+# UNICODE_VERSION is the Unicode Character Database version this build
+# normalizes and validates against - compare it across a fleet to catch a
+# node running a Python/ICU pairing that would normalize text differently
+from knurl.canon import UNICODE_VERSION
 ```
 
 ### Content-Addressable Hashing
@@ -158,6 +168,19 @@ schedule_hash = hash.compute('{"cron": "0 * * * *"}', prefix="schedule")
 # Verify content matches hash
 is_valid = hash.verify("hello world", content_hash)  # True
 is_valid = hash.verify("hello", content_hash)  # False
+
+# Bytes, files, and directory trees hash the same way
+blob_hash = hash.compute_bytes(b"\x00\x01\x02")
+file_hash = hash.compute_file("video.mp4")      # streamed, safe for multi-GB files
+tree_hash = hash.compute_tree("mirror/")        # one digest for a whole directory
+
+# compute_tree_manifest does the same walk but also returns the per-file
+# hashes it was built from, so you can address individual blobs for
+# content-addressed dedup instead of only the rolled-up tree digest
+manifest = hash.compute_tree_manifest("mirror/")
+manifest.digest                    # == compute_tree("mirror/")
+manifest.entries["index.html"]     # {'type': 'file', 'hash': 'sha256:...'}
+manifest.paths["index.html"]       # real on-disk relative path, to re-read the bytes
 ```
 
 ### Chain Fingerprinting
